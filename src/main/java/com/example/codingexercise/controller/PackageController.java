@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collection;
+
 @RestController
+@RequestMapping("/api/v1/packages")
 public class PackageController {
 
     private final PackageRepository packageRepository;
@@ -17,13 +20,18 @@ public class PackageController {
         this.packageRepository = packageRepository;
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/packages")
+    @RequestMapping(method = RequestMethod.POST)
     public ProductPackage create(@RequestBody ProductPackage newProductPackage) {
         return packageRepository.create(newProductPackage.getName(), newProductPackage.getDescription(), newProductPackage.getProductIds());
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/packages/{id}")
+    @RequestMapping(method = RequestMethod.GET, value = "/{id}")
     public ProductPackage get(@PathVariable String id) {
         return packageRepository.get(id);
+    }
+
+    @RequestMapping(method = RequestMethod.GET)
+    public Collection<ProductPackage> getAll() {
+        return packageRepository.getAll();
     }
 }
