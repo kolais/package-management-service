@@ -1,5 +1,8 @@
 package com.example.codingexercise;
 
+import com.example.codingexercise.controller.dto.PackageRequest;
+import com.example.codingexercise.controller.dto.ProductRequest;
+import com.example.codingexercise.model.Product;
 import com.example.codingexercise.model.ProductPackage;
 import com.example.codingexercise.repository.PackageRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +21,7 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -32,14 +36,24 @@ class PackageControllerTests {
         this.packageRepository = packageRepository;
     }
 
-    private static void assertPackageEquals(ProductPackage expected, ProductPackage actual, boolean shouldCheckId) {
+    private static void assertPackageEquals(ProductPackage expected, ProductPackage actual) {
         assertNotNull(actual, "Unexpected package");
-        if (shouldCheckId) {
-            assertEquals(expected.getId(), actual.getId(), "Unexpected id");
-        }
-        assertEquals(expected.getName(), actual.getName(), "Unexpected name");
-        assertEquals(expected.getDescription(), actual.getDescription(), "Unexpected description");
-        assertEquals(expected.getProductIds(), actual.getProductIds(), "Unexpected products");
+
+        assertEquals(expected.id(), actual.id(), "Unexpected ID");
+        assertEquals(expected.name(), actual.name(), "Unexpected name");
+        assertEquals(expected.description(), actual.description(), "Unexpected description");
+        assertIterableEquals(expected.products(), actual.products(), "Unexpected products");
+    }
+
+    private static void assertPackageEqualsRequest(PackageRequest expected, ProductPackage actual) {
+        assertNotNull(actual, "Unexpected package");
+
+        assertEquals(expected.name(), actual.name(), "Unexpected name");
+        assertEquals(expected.description(), actual.description(), "Unexpected description");
+        assertIterableEquals(expected.products(),
+                actual.products().stream().map(p -> new ProductRequest(p.id(), p.quantity())).toList(),
+                "Unexpected products");
+
     }
 
     @BeforeEach
@@ -47,47 +61,66 @@ class PackageControllerTests {
         // ensure there are no packages in the repository before each test
         packageRepository.getAll()
                 .stream()
-                .map(ProductPackage::getId)
+                .map(ProductPackage::id)
                 .forEach(packageRepository::delete);
     }
 
     @Test
     void createPackage() {
-        ProductPackage packageToCreate = new ProductPackage(null, "Test Name", "Test Desc", List.of("prod1"));
-        ResponseEntity<ProductPackage> created = restTemplate.postForEntity("/api/v1/packages", packageToCreate, ProductPackage.class);
+        var packageToCreate = new PackageRequest("Test Name", "Test Desc", List.of(new ProductRequest("prod1", 1)));
+        var created = restTemplate.postForEntity("/api/v1/packages", packageToCreate, ProductPackage.class);
         assertEquals(HttpStatus.OK, created.getStatusCode(), "Unexpected status code");
         ProductPackage createdBody = created.getBody();
-        assertPackageEquals(packageToCreate, createdBody, false);
+        assertPackageEqualsRequest(packageToCreate, createdBody);
 
-        ProductPackage productPackage = packageRepository.get(createdBody.getId());
-        assertPackageEquals(createdBody, productPackage, true);
+        var productPackage = packageRepository.get(createdBody.id());
+        assertPackageEquals(createdBody, productPackage);
     }
 
     @Test
     void getPackage() {
-        ProductPackage productPackage = packageRepository.create("Test Name 2", "Test Desc 2", List.of("prod2"));
-        ResponseEntity<ProductPackage> fetched = restTemplate.getForEntity("/api/v1/packages/{id}", ProductPackage.class, productPackage.getId());
+        var productPackage = packageRepository.create(
+                new ProductPackage(null,
+                        "Test Name 1",
+                        "Test Desc 1",
+                        List.of(new Product("TestProdID01", "Test Product Name 1", 10, 1)),
+                        10));
+        ResponseEntity<ProductPackage> fetched = restTemplate.getForEntity("/api/v1/packages/{id}", ProductPackage.class, productPackage.id());
         assertEquals(HttpStatus.OK, fetched.getStatusCode(), "Unexpected status code");
         ProductPackage fetchedBody = fetched.getBody();
         assertNotNull(fetchedBody, "Unexpected body");
-        assertPackageEquals(productPackage, fetchedBody, true);
+        assertPackageEquals(productPackage, fetchedBody);
     }
 
     @Test
     void listPackages() {
-        ProductPackage productPackage1 = packageRepository.create("Test Name 1", "Test Desc 1", List.of("prod1"));
-        ProductPackage productPackage2 = packageRepository.create("Test Name 2", "Test Desc 2", List.of("prod2"));
+        var productPackage1 = packageRepository.create(
+                new ProductPackage(null,
+                        "Test Name 1",
+                        "Test Desc 1",
+                        List.of(new Product("TestProdID01", "Test Product Name 1", 10, 1)),
+                        10));
 
-        ResponseEntity<List<ProductPackage>> fetched = restTemplate.exchange("/api/v1/packages", HttpMethod.GET, null, new ParameterizedTypeReference<>() {
-        });
+        var productPackage2 = packageRepository.create(
+                new ProductPackage(null,
+                        "Test Name 2",
+                        "Test Desc 2",
+                        List.of(new Product("TestProdID01", "Test Product Name 1", 10, 1)),
+                        10));
+
+        ResponseEntity<List<ProductPackage>> fetched = restTemplate.exchange("/api/v1/packages",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
         assertEquals(HttpStatus.OK, fetched.getStatusCode(), "Unexpected status code");
-        List<ProductPackage> fetchedBody = fetched.getBody();
+        var fetchedBody = fetched.getBody();
         assertNotNull(fetchedBody, "Unexpected body");
         Map<String, ProductPackage> fetchedProductsMap = fetchedBody
                 .stream()
-                .collect(toMap(ProductPackage::getId, Function.identity()));
+                .collect(toMap(ProductPackage::id, Function.identity()));
         assertEquals(2, fetchedProductsMap.size(), "Unexpected number of products");
-        assertPackageEquals(productPackage1, fetchedProductsMap.get(productPackage1.getId()), true);
-        assertPackageEquals(productPackage2, fetchedProductsMap.get(productPackage2.getId()), true);
+        assertPackageEquals(productPackage1, fetchedProductsMap.get(productPackage1.id()));
+        assertPackageEquals(productPackage2, fetchedProductsMap.get(productPackage2.id()));
     }
 }

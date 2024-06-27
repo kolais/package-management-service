@@ -1,7 +1,9 @@
 package com.example.codingexercise.controller;
 
+import com.example.codingexercise.controller.dto.PackageRequest;
 import com.example.codingexercise.model.ProductPackage;
-import com.example.codingexercise.repository.PackageRepository;
+import com.example.codingexercise.service.PackageService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,24 +16,24 @@ import java.util.Collection;
 @RequestMapping("/api/v1/packages")
 public class PackageController {
 
-    private final PackageRepository packageRepository;
+    private final PackageService packageService;
 
-    public PackageController(PackageRepository packageRepository) {
-        this.packageRepository = packageRepository;
+    public PackageController(PackageService packageService) {
+        this.packageService = packageService;
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ProductPackage create(@RequestBody ProductPackage newProductPackage) {
-        return packageRepository.create(newProductPackage.getName(), newProductPackage.getDescription(), newProductPackage.getProductIds());
+    public ProductPackage create(@Valid @RequestBody PackageRequest packageRequest) {
+        return packageService.create(packageRequest);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/{id}")
     public ProductPackage get(@PathVariable String id) {
-        return packageRepository.get(id);
+        return packageService.get(id);
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public Collection<ProductPackage> getAll() {
-        return packageRepository.getAll();
+        return packageService.getAll();
     }
 }
