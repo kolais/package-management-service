@@ -23,6 +23,15 @@ public class PackageRepository {
         return productPackages.get(id);
     }
 
+    public ProductPackage update(String id, ProductPackage productPackage) {
+        if (!productPackages.containsKey(id)) {
+            return null;
+        }
+        var newProductPackage = productPackage.withId(id);
+        productPackages.put(id, newProductPackage);
+        return newProductPackage;
+    }
+
     public void delete(String id) {
         productPackages.remove(id);
     }

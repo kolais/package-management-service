@@ -19,6 +19,28 @@ public class PackageService {
     }
 
     public ProductPackage create(PackageRequest packageRequest) {
+        var productPackage = validateAndCreateProductPackage(packageRequest);
+        return packageRepository.create(productPackage);
+    }
+
+    public ProductPackage get(String id) {
+        return packageRepository.get(id);
+    }
+
+    public ProductPackage update(String id, PackageRequest packageRequest) {
+        var productPackage = validateAndCreateProductPackage(packageRequest);
+        return packageRepository.update(id, productPackage);
+    }
+
+    public void delete(String id) {
+        packageRepository.delete(id);
+    }
+
+    public Collection<ProductPackage> getAll() {
+        return packageRepository.getAll();
+    }
+
+    private ProductPackage validateAndCreateProductPackage(PackageRequest packageRequest) {
         var products = new ArrayList<Product>();
         int usdTotalPrice = 0;
         for (var productToAdd : packageRequest.products()) {
@@ -27,14 +49,6 @@ public class PackageService {
             products.add(product);
             usdTotalPrice += product.usdItemPrice() * product.quantity();
         }
-        return packageRepository.create(new ProductPackage(null, packageRequest.name(), packageRequest.description(), products, usdTotalPrice));
-    }
-
-    public ProductPackage get(String id) {
-        return packageRepository.get(id);
-    }
-
-    public Collection<ProductPackage> getAll() {
-        return packageRepository.getAll();
+        return new ProductPackage(null, packageRequest.name(), packageRequest.description(), products, usdTotalPrice);
     }
 }

@@ -32,6 +32,16 @@ public class PackageController {
         return packageService.get(id);
     }
 
+    @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
+    public ProductPackage update(@PathVariable String id, @Valid @RequestBody PackageRequest packageRequest) {
+        return packageService.update(id, packageRequest);
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
+    public void delete(@PathVariable String id) {
+        packageService.delete(id);
+    }
+
     @RequestMapping(method = RequestMethod.GET)
     public Collection<ProductPackage> getAll() {
         return packageService.getAll();
