@@ -12,11 +12,7 @@ spring:
   cache:
     type: caffeine
     caffeine:
-      spec: maximumSize=50,expireAfterAccess=60m
+      spec: maximumSize=50,expireAfterAccess=10m
 
-#server:
-#  error:
-#    include-message: always
-#    include-binding-errors: always
-#    include-stacktrace: on_trace_param
-#    include-exception: false
+server:
+  port: 8080
