@@ -1,5 +1,7 @@
 package com.example.codingexercise.gateway;
 
+import com.example.codingexercise.exception.GatewayException;
+import com.example.codingexercise.exception.UnknownProductException;
 import com.example.codingexercise.gateway.dto.Product;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,10 +25,10 @@ public class ProductServiceGateway {
     @Value("${product-service.api.url}")
     private String apiUrl;
 
-    @Value("${product-service.api.auth.username}")
+    @Value("${product-service.api.auth.username:''}")
     private String apiAuthUsername;
 
-    @Value("${product-service.api.auth.password}")
+    @Value("${product-service.api.auth.password:''}")
     private String apiAuthPassword;
 
     public ProductServiceGateway(RestTemplate restTemplate) {
@@ -42,11 +44,9 @@ public class ProductServiceGateway {
         try {
             return restTemplate.exchange(requestEntity, Product.class).getBody();
         } catch (HttpClientErrorException.NotFound x) {
-            logger.warn("Product with ID [{}] not found", id);
-            return null;
+            throw new UnknownProductException(id);
         } catch (HttpClientErrorException x) {
-            logger.error("An exception occurred while querying product service", x);
-            return null;
+            throw new GatewayException("Problem querying product service", x);
         }
     }
 

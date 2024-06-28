@@ -3,6 +3,7 @@ package com.example.codingexercise.service;
 import com.example.codingexercise.controller.dto.PackageRequest;
 import com.example.codingexercise.controller.dto.PackageResponse;
 import com.example.codingexercise.controller.dto.ProductResponse;
+import com.example.codingexercise.exception.UnknownProductException;
 import com.example.codingexercise.gateway.CurrencyRateServiceGateway;
 import com.example.codingexercise.gateway.ProductServiceGateway;
 import com.example.codingexercise.model.Product;
@@ -14,8 +15,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import static java.lang.String.format;
 
 @Service
 public class PackageService {
@@ -62,7 +61,7 @@ public class PackageService {
         for (var productToAdd : packageRequest.products()) {
             var productItem = productServiceGateway.getProduct(productToAdd.id());
             if (null == productItem) {
-                throw new IllegalArgumentException(format("Unknown product %s", productToAdd.id()));
+                throw new UnknownProductException(productToAdd.id());
             }
             var product = new Product(productItem.id(), productItem.name(), productItem.usdPrice(), productToAdd.quantity(), productItem.usdPrice() * productToAdd.quantity());
             products.add(product);
@@ -77,7 +76,6 @@ public class PackageService {
      * currencies where the minimal unit is 1/100 of the base currency unit, which is not universal.
      */
     private PackageResponse renderPackageResponseWithCurrencyConversion(ProductPackage productPackage, String currency) {
-        // TODO: work out error handling here (rate == null)
         var rate = currencyRateServiceGateway.getRate(BASE_CURRENCY, currency);
         var products = new ArrayList<ProductResponse>();
         var totalPrice = BigDecimal.ZERO;

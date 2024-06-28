@@ -1,0 +1,22 @@
+product-service:
+  api:
+    url: https://product-service.herokuapp.com/api/v1/products
+
+frankfurter:
+  api:
+    url: https://api.frankfurter.app
+
+spring:
+  profiles:
+    active: prod
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=50,expireAfterAccess=60m
+
+#server:
+#  error:
+#    include-message: always
+#    include-binding-errors: always
+#    include-stacktrace: on_trace_param
+#    include-exception: false

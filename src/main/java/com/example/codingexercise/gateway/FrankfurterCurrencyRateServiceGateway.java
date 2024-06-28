@@ -1,5 +1,7 @@
 package com.example.codingexercise.gateway;
 
+import com.example.codingexercise.exception.GatewayException;
+import com.example.codingexercise.exception.UnknownCurrencyException;
 import com.example.codingexercise.gateway.dto.ConversionRates;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,13 +39,11 @@ public class FrankfurterCurrencyRateServiceGateway implements CurrencyRateServic
         var requestEntity = RequestEntity.get(apiUrl + "/latest?from={from}&to={to}", base, currency).build();
         try {
             var rates = ofNullable(restTemplate.exchange(requestEntity, ConversionRates.class).getBody());
-            return rates.map(ConversionRates::rates).map(r -> r.get(currency)).orElse(null);
-        } catch (HttpClientErrorException.NotFound x) {
-            logger.warn("Currency rate for [{}/{}] not found", base, currency);
-            return null;
-        } catch (HttpClientErrorException x) {
-            logger.error("An exception occurred while querying Frankfurter service", x);
-            return null;
+            return rates.map(ConversionRates::rates).map(r -> r.get(currency)).orElseThrow(() -> new Exception("No rate returned"));
+        } catch (HttpClientErrorException.NotFound exception) {
+            throw new UnknownCurrencyException(base, currency);
+        } catch (Exception x) {
+            throw new GatewayException("Problem querying Frankfurter service", x);
         }
     }
 }
