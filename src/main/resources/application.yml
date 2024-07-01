@@ -13,6 +13,13 @@ spring:
     type: caffeine
     caffeine:
       spec: maximumSize=50,expireAfterAccess=10m
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pmsdb
+    username: pmsuser
+    password: secret
+  sql:
+    init:
+      mode: always
 
 server:
   port: 8080

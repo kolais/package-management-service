@@ -21,6 +21,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    runtimeOnly("org.postgresql:postgresql")
     implementation("org.apache.logging.log4j:log4j-api")
     runtimeOnly("com.github.ben-manes.caffeine:caffeine")
     implementation("org.apache.commons:commons-lang3:3.14.0")
